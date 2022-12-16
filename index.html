@@ -6,38 +6,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
     <style>
-      img{
+      #time {
+        font-family: "Courier New", Courier, monospace;
+      }
+      img {
         width: 500px;
       }
+      #result{
+        scale: 0.6;
+        /* box-shadow: 0 0 12px rgba(0, 0, 0, 0.16); */
+      }
+      div > img{
+        position: absolute;
+      }
       @media (max-width: 500px) {
-        img{
+        img {
           width: 100%;
         }
       }
     </style>
   </head>
   <body>
-    <img id="img" /><br />
+    <img id="img" /><img id="loaderGif" style="width: 50px; filter: invert(1); display: none" src="./loading.gif" /><br />
     <input id="imgInput" type="file" accept=".png, .jpg, .bmp, .jpeg" />
+    <div id="time">Time taken</div>
     <input id="slider" type="range" /><br />
     <div>
+      <img src="./PImage.png" alt="">
       <img id="result" />
     </div>
     <script>
       let imgInput = document.getElementById("imgInput");
       let slider = document.getElementById("slider");
-      let threshold = 0.6 + slider.value/220
-      let threshold1 = 30 * (1 + slider.value/10)
+      let loaderGif = document.getElementById("loaderGif");
+      let done = false;
+      let threshold = 0.7 + slider.value / 250;
+      let threshold1 = 35 * (1 + slider.value / 10);
       slider.onchange = () => {
-        threshold = 0.6 + slider.value / 220;
-        threshold1 = 30 * (1 + slider.value / 10)
+        threshold = 0.7 + slider.value / 250;
+        threshold1 = 35 * (1 + slider.value / 10);
         img.src = img.src;
+        loaderGif.style.display = "block";
+        slider.style.display = "none";
+        imgInput.style.display = "none";
       };
       imgInput.onchange = (e) => {
         let file = e.target.files[0];
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
+          loaderGif.style.display = "block";
+          slider.style.display = "none";
+          imgInput.style.display = "none";
           img.src = reader.result;
         };
       };
@@ -46,13 +66,13 @@
       let ctx = c.getContext("2d", { willReadFrequently: true });
       var img1 = document.getElementById("img");
       let pixels = [];
-      let width = 2000;
-      img1.onload = async() => {
+      let width = 800;
+      img1.onload = () => {
         let t1 = new Date().getTime();
         let img = new Image();
         img.src = img1.src;
-        img.height = img.height/(img.width/width)
-        img.width = width
+        img.height = img.height / (img.width / width);
+        img.width = width;
         c.height = img.height;
         c.width = img.width;
         ctx.filter = "grayscale(1)";
@@ -65,27 +85,27 @@
           }
         }
 
-        let kernelSize = 20
-        let kernelSquare = kernelSize * kernelSize
-        let kernelSizeBy2 = Math.ceil(kernelSize/2)
-        let temp = threshold/kernelSquare
-        let count = 0
-        for (let i = 0; i < pixels.length; i++){
-          let initY = i - kernelSizeBy2
-          for (let j = 0; j < pixels[i].length; j++){
+        let kernelSize = 20;
+        let kernelSquare = kernelSize * kernelSize;
+        let kernelBy2 = Math.ceil(kernelSize / 2);
+        let temp = threshold / kernelSquare;
+        let count = 0;
+        for (let i = 0; i < pixels.length; i++) {
+          let initY = i - kernelBy2;
+          for (let j = 0; j < pixels[i].length; j++) {
             if (pixels[i][j] < threshold1) {
-              let initX = j - kernelSizeBy2
-              let sum = 0
-              for (let k = 0; k < kernelSize; k++){
-                let initY1 = initY + k
-                for (let l = 0; l < kernelSize; l++){
-                  if (initX + l >= 0 && initX + l < pixels[i].length && initY1 >= 0 && initY1 < pixels.length){
-                    sum += pixels[initY1][initX + l]
+              let initX = j - kernelBy2;
+              let sum = 0;
+              for (let k = 0; k < kernelSize; k++) {
+                let initY1 = initY + k;
+                for (let l = 0; l < kernelSize; l++) {
+                  if (initX + l >= 0 && initX + l < pixels[i].length && initY1 >= 0 && initY1 < pixels.length) {
+                    sum += pixels[initY1][initX + l];
                   }
                 }
               }
               if (pixels[i][j] < sum * temp) {
-                data.data[count] = 0
+                data.data[count] = 0;
                 data.data[count + 1] = 0;
                 data.data[count + 2] = 0;
                 data.data[count + 3] = 255;
@@ -101,12 +121,18 @@
               data.data[count + 2] = 0;
               data.data[count + 3] = 0;
             }
-            count += 4
+            count += 4;
           }
         }
         ctx.putImageData(data, 0, 0);
         document.getElementById("result").src = c.toDataURL();
+        t2 = new Date().getTime() - t1;
+        document.getElementById("time").innerHTML = "Time taken: " + t2 / 1000 + " seconds";
         console.log(new Date().getTime() - t1);
+        slider.style.display = "block";
+        imgInput.style.display = "block";
+        loaderGif.style.display = "none";
+        done = true;
       };
     </script>
   </body>
