@@ -26,11 +26,11 @@
     <script>
       let imgInput = document.getElementById("imgInput");
       let slider = document.getElementById("slider");
-      let threshold = 0.5;
-      let threshold1 = 25
+      let threshold = 0.6 + slider.value/220
+      let threshold1 = 30 * (1 + slider.value/10)
       slider.onchange = () => {
-        threshold = 0.5 + slider.value / 220;
-        threshold1 = 25 * (1 + slider.value / 10)
+        threshold = 0.6 + slider.value / 220;
+        threshold1 = 30 * (1 + slider.value / 10)
         img.src = img.src;
       };
       imgInput.onchange = (e) => {
@@ -46,7 +46,7 @@
       let ctx = c.getContext("2d", { willReadFrequently: true });
       var img1 = document.getElementById("img");
       let pixels = [];
-      let width = 1500;
+      let width = 2000;
       img1.onload = async() => {
         let t1 = new Date().getTime();
         let img = new Image();
@@ -67,13 +67,14 @@
 
         let kernelSize = 20
         let kernelSquare = kernelSize * kernelSize
+        let kernelSizeBy2 = Math.ceil(kernelSize/2)
         let temp = threshold/kernelSquare
         let count = 0
         for (let i = 0; i < pixels.length; i++){
-          let initY = i - Math.ceil(kernelSize / 2);
+          let initY = i - kernelSizeBy2
           for (let j = 0; j < pixels[i].length; j++){
             if (pixels[i][j] < threshold1) {
-              let initX = j - Math.ceil(kernelSize / 2);
+              let initX = j - kernelSizeBy2
               let sum = 0
               for (let k = 0; k < kernelSize; k++){
                 let initY1 = initY + k
