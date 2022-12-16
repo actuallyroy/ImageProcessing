@@ -26,9 +26,11 @@
     <script>
       let imgInput = document.getElementById("imgInput");
       let slider = document.getElementById("slider");
-      let quality = 0.5;
+      let threshold = 0.5;
+      let threshold1 = 25
       slider.onchange = () => {
-        quality = 0.5 + slider.value / 220;
+        threshold = 0.5 + slider.value / 220;
+        threshold1 = 25 * (1 + slider.value / 10)
         img.src = img.src;
       };
       imgInput.onchange = (e) => {
@@ -64,24 +66,27 @@
         }
 
         let pixelsAvgB = []
-        let kernelSize = 20
+        let kernelSize = 15
+        let kernelSquare = kernelSize * kernelSize
+        let temp = threshold/kernelSquare
         let count = 0
         for (let i = 0; i < pixels.length; i++){
           pixelsAvgB[i] = []
           for (let j = 0; j < pixels[i].length; j++){
-            let initX = j - Math.ceil(kernelSize / 2);
-            let initY = i - Math.ceil(kernelSize / 2);
-            let sum = 0
-            for (let k = 0; k < kernelSize; k++){
-              for (let l = 0; l < kernelSize; l++){
-                if (initX + l >= 0 && initX + l < pixels[i].length && initY + k >= 0 && initY + k < pixels.length){
-                  sum += pixels[initY + k][initX + l]
+            if (pixels[i][j] < threshold1) {
+              let initX = j - Math.ceil(kernelSize / 2);
+              let initY = i - Math.ceil(kernelSize / 2);
+              let sum = 0
+              for (let k = 0; k < kernelSize; k++){
+                let initY1 = initY + k
+                for (let l = 0; l < kernelSize; l++){
+                  if (initX + l >= 0 && initX + l < pixels[i].length && initY1 >= 0 && initY1 < pixels.length){
+                    sum += pixels[initY1][initX + l]
+                  }
                 }
               }
-            }
-            pixelsAvgB[i][j] = sum / (kernelSize * kernelSize)
-            if (pixels[i][j] < 25 * (1 + slider.value / 10)) {
-              if (pixels[i][j] < pixelsAvgB[i][j] * quality) {
+              // pixelsAvgB[i][j] = sum / kernelSquare
+              if (pixels[i][j] < sum * temp) {
                 data.data[count] = 0
                 data.data[count + 1] = 0;
                 data.data[count + 2] = 0;
