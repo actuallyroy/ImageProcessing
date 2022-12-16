@@ -65,17 +65,15 @@
           }
         }
 
-        let pixelsAvgB = []
-        let kernelSize = 15
+        let kernelSize = 20
         let kernelSquare = kernelSize * kernelSize
         let temp = threshold/kernelSquare
         let count = 0
         for (let i = 0; i < pixels.length; i++){
-          pixelsAvgB[i] = []
+          let initY = i - Math.ceil(kernelSize / 2);
           for (let j = 0; j < pixels[i].length; j++){
             if (pixels[i][j] < threshold1) {
               let initX = j - Math.ceil(kernelSize / 2);
-              let initY = i - Math.ceil(kernelSize / 2);
               let sum = 0
               for (let k = 0; k < kernelSize; k++){
                 let initY1 = initY + k
@@ -85,7 +83,6 @@
                   }
                 }
               }
-              // pixelsAvgB[i][j] = sum / kernelSquare
               if (pixels[i][j] < sum * temp) {
                 data.data[count] = 0
                 data.data[count + 1] = 0;
