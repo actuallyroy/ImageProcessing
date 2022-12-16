@@ -9,11 +9,6 @@
       img{
         width: 500px;
       }
-      @media (max-width: 500px) {
-        img{
-          width: 100%;
-        }
-      }
     </style>
   </head>
   <body>
@@ -21,14 +16,17 @@
     <input id="imgInput" type="file" accept=".png, .jpg, .bmp, .jpeg" />
     <input id="slider" type="range" /><br />
     <div>
+      <!-- <img style="width: 1000px;" src="./scroll.png"/> -->
       <img id="result" />
     </div>
     <script>
       let imgInput = document.getElementById("imgInput");
       let slider = document.getElementById("slider");
-      let quality = 0.5;
+      let threshold = 0.5;
+      let threshold1 = 25
       slider.onchange = () => {
-        quality = 0.5 + slider.value / 220;
+        threshold = 0.5 + slider.value / 220;
+        threshold1 = 25 * (1 + slider.value / 10)
         img.src = img.src;
       };
       imgInput.onchange = (e) => {
@@ -56,32 +54,28 @@
         ctx.filter = "grayscale(1)";
         ctx.drawImage(img, 0, 0, img.width, img.height);
         let data = ctx.getImageData(0, 0, img.width, img.height);
-        for (let i = 0; i < data.height; i++) {
-          pixels[i] = [];
-          for (let j = 0; j < data.width; j++) {
-            pixels[i][j] = data.data[(i * data.width + j) * 4];
-          }
-        }
-
         let pixelsAvgB = []
         let kernelSize = 20
-        let count = 0
-        for (let i = 0; i < pixels.length; i++){
+        let kernelSquare = kernelSize * kernelSize
+        for (let i = 0; i < data.height; i++) {
+          pixels[i] = [];
           pixelsAvgB[i] = []
-          for (let j = 0; j < pixels[i].length; j++){
-            let initX = j - Math.ceil(kernelSize / 2);
-            let initY = i - Math.ceil(kernelSize / 2);
-            let sum = 0
-            for (let k = 0; k < kernelSize; k++){
-              for (let l = 0; l < kernelSize; l++){
-                if (initX + l >= 0 && initX + l < pixels[i].length && initY + k >= 0 && initY + k < pixels.length){
-                  sum += pixels[initY + k][initX + l]
+          for (let j = 0; j < data.width; j++) {
+            // let p = new Pixel(data.data[(i * data.width + j) * 4], data.data[(i * data.width + j) * 4 + 1], data.data[(i * data.width + j) * 4 + 2], data.data[(i * data.width + j) * 4 + 3]);
+            // pixels[i][j] = data.data[(i * data.width + j) * 4];
+            if(data.data[(i * data.width + j) * 4] < threshold1){
+              let initX = j - Math.ceil(kernelSize / 2);
+              let initY = i - Math.ceil(kernelSize / 2);
+              let sum = 0
+              for (let k = 0; k < kernelSize; k++){
+                for (let l = 0; l < kernelSize; l++){
+                  if (initX + l >= 0 && initX + l < data.width && initY + k >= 0 && initY + k < data.height){
+                    sum += data.data[((initY + k) * data.width + initX + l) * 4]
+                  }
                 }
               }
-            }
-            pixelsAvgB[i][j] = sum / (kernelSize * kernelSize)
-            if (pixels[i][j] < 25 * (1 + slider.value / 10)) {
-              if (pixels[i][j] < pixelsAvgB[i][j] * quality) {
+              pixelsAvgB[i][j] = sum / kernelSquare;
+              if (data.data[(i * data.width + j) * 4] < pixelsAvgB[i][j] * threshold) {
                 data.data[count] = 0
                 data.data[count + 1] = 0;
                 data.data[count + 2] = 0;
@@ -92,19 +86,160 @@
                 data.data[count + 2] = 0;
                 data.data[count + 3] = 0;
               }
-            } else {
+            }else{
               data.data[count] = 0;
               data.data[count + 1] = 0;
               data.data[count + 2] = 0;
               data.data[count + 3] = 0;
             }
-            count += 4
+            count += 4;
           }
         }
+
+        // let pixelsAvgB = []
+        // let kernelSize = 20
+        // let kernelSquare = kernelSize * kernelSize
+        // let count = 0
+        // for (let i = 0; i < pixels.length; i++){
+        //   pixelsAvgB[i] = []
+        //   for (let j = 0; j < pixels[i].length; j++){
+        //     if (pixels[i][j] < threshold1) {
+        //       let initX = j - Math.ceil(kernelSize / 2);
+        //       let initY = i - Math.ceil(kernelSize / 2);
+        //       let sum = 0
+        //       for (let k = 0; k < kernelSize; k++){
+        //         for (let l = 0; l < kernelSize; l++){
+        //           if (initX + l >= 0 && initX + l < pixels[i].length && initY + k >= 0 && initY + k < pixels.length){
+        //             sum += pixels[initY + k][initX + l]
+        //           }
+        //         }
+        //       }
+        //       pixelsAvgB[i][j] = sum / kernelSquare;
+        //       if (pixels[i][j] < pixelsAvgB[i][j] * threshold) {
+        //         data.data[count] = 0
+        //         data.data[count + 1] = 0;
+        //         data.data[count + 2] = 0;
+        //         data.data[count + 3] = 255;
+        //       } else {
+        //         data.data[count] = 0;
+        //         data.data[count + 1] = 0;
+        //         data.data[count + 2] = 0;
+        //         data.data[count + 3] = 0;
+        //       }
+        //     } else {
+        //       data.data[count] = 0;
+        //       data.data[count + 1] = 0;
+        //       data.data[count + 2] = 0;
+        //       data.data[count + 3] = 0;
+        //     }
+        //     count += 4
+        //   }
+        // }
         ctx.putImageData(data, 0, 0);
         document.getElementById("result").src = c.toDataURL();
         console.log(new Date().getTime() - t1);
       };
+
+      // img.onmousemove = (e) => {
+      //   let x = Math.floor(e.offsetX)
+      //   let y = Math.floor(e.offsetY)
+      //   let k = new Kernel(3, pixels)
+      //   // console.log(x, y, pixels[x][y])
+      //   console.log(k.getMatrix(x, y))
+      // }
+
+      class Kernel {
+        constructor(size, pixels) {
+          if (size % 2 == 0) {
+            size++;
+          }
+          this.size = size;
+          this.matrix = [];
+          this.pixels = pixels;
+          this.brightness = 0;
+        }
+
+        getMatrix(x, y) {
+          this.matrix = [];
+          this.calcMatrix(x, y);
+          return this.matrix;
+        }
+
+        getAvgBrightness(x, y) {
+          let initX = x - Math.ceil(this.size / 2);
+          let initY = y - Math.ceil(this.size / 2);
+          let r = 0;
+          let g = 0;
+          let b = 0;
+          for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+              try {
+                let p = this.pixels[initY + i][initX + j];
+                if (p) {
+                  r += p.r;
+                  g += p.g;
+                  b += p.b;
+                }
+              } catch (error) {}
+            }
+          }
+          this.brightness = (r + g + b) / (this.size * this.size);
+          return this.brightness;
+        }
+
+        getAvgGrayScaleBrightness(x, y){
+          let initX = x - Math.ceil(this.size / 2);
+          let initY = y - Math.ceil(this.size / 2);
+          let brightness = 0;
+          for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+              try {
+                let p = this.pixels[initY + i][initX + j];
+                if (p) {
+                  brightness += p.r
+                }
+              } catch (error) {}
+            }
+          }
+          return brightness / (this.size * this.size);
+        }
+
+        calcMatrix(x, y) {
+          let initX = x - Math.ceil(this.size / 2);
+          let initY = y - Math.ceil(this.size / 2);
+          for (let i = 0; i < this.size; i++) {
+            this.matrix.push([]);
+            for (let j = 0; j < this.size; j++) {
+              try {
+                let p = this.pixels[initY + i][initX + j];
+                if (p) {
+                  this.matrix[i].push(p);
+                } else this.matrix[i].push(new Pixel(0, 0, 0, 255));
+              } catch (error) {
+                this.matrix[i].push(new Pixel(0, 0, 0, 255));
+              }
+            }
+          }
+        }
+      }
+
+      class Pixel {
+        constructor(r, g, b, a) {
+          this.r = r;
+          this.g = g;
+          this.b = b;
+          this.a = a;
+        }
+
+        // converting scale from 0 - 255 to 0 - 10
+        getBrightness() {
+          return this.r + this.g + this.b;
+        }
+
+        getGrayScaleBrightness(){
+          return this.r
+        }
+      }
     </script>
   </body>
 </html>
