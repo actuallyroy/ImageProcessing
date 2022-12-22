@@ -5,59 +5,177 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+    <!-- <link rel="stylesheet" href="style.css"> -->
     <style>
-      #time {
-        font-family: "Courier New", Courier, monospace;
+      * {
+        font-family: "Futura";
       }
-      img {
-        width: 500px;
+      .left,
+      .right {
+        display: flex;
+        /* overflow: hidden; */
+        height: 100vh;
+        width: 35%;
+        flex-direction: column;
+        align-items: center;
       }
-      #result{
-        /* scale: 0.6; */
-        box-shadow: 0 0 12px rgba(0, 0, 0, 0.16);
+
+      #img {
+        width: 90%;
+        height: calc(100vh - 150px);
+        object-fit: contain;
+        background-color: #f2f2f2;
+        border-radius: 5px;
       }
-      div > img{
-        position: absolute;
+      .left {
+        margin-right: 30%;
+        align-items: flex-start;
       }
-      @media (max-width: 500px) {
-        img {
+
+      body {
+        display: flex;
+        flex-direction: row;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      span {
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      input {
+        margin-bottom: 20px;
+      }
+
+      .result-cont {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .result-cont > img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        position: relative;
+      }
+
+      .result-bg {
+        filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.16));
+      }
+
+      .slider-cont {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+      }
+
+      #result {
+        top: -47%;
+        object-fit: contain;
+        scale: 0.7;
+        height: 100%;
+        width: 100%;
+      }
+
+      #loaderGif {
+        width: 50px;
+        position: relative;
+        left: 42%;
+        top: -67%;
+        filter: brightness(0.5);
+        visibility: hidden;
+      }
+
+      #imgInput::-webkit-file-upload-button {
+        display: none;
+      }
+      #uploadBtn {
+        background-color: #ed071a;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        cursor: pointer;
+      }
+      #imgInput {
+        cursor: pointer;
+        pointer-events: none;
+        text-align: center;
+        width: 200px;
+        margin-bottom: 15px;
+      }
+
+      @media (max-width: 400px) {
+        body {
+          flex-direction: column;
+          overflow: scroll;
+        }
+        .left,
+        .right {
           width: 100%;
+          margin-bottom: 100px;
+        }
+        .left {
+          height: 70vh;
+          margin: 0;
+          align-items: center;
+        }
+        #img {
+          height: 70%;
+          align-self: center;
         }
       }
     </style>
+    <link rel="stylesheet" href="https://d1tsukz865bhnw.cloudfront.net/scripts/MemoryMap/MemoryMap.css" />
   </head>
   <body>
-    <img id="img" /><img id="loaderGif" style="width: 50px; filter: invert(1); display: none" src="./loading.gif" /><br />
-    <input id="imgInput" type="file" accept=".png, .jpg, .bmp, .jpeg" />
-    <div id="time">Time taken</div>
-    <input id="slider" type="range" /><br />
-    <div>
-      <!-- <img src="./PImage.png" alt=""> -->
-      <img id="result" />
+    <div class="left">
+      <span>Upload a picture of your handwritten letter</span>
+      <button id="uploadBtn">Upload your Picture</button>
+      <input id="imgInput" type="file" accept=".png, .jpg, .bmp, .jpeg" />
+      <img src="./default1.jpg" id="img" />
+    </div>
+    <div class="right">
+      <div class="slider-cont">
+        <span>Adjust the slider to get the best result</span>
+        <input id="slider" type="range" step="5" />
+      </div>
+      <!-- <div id="time">Time taken</div> -->
+      <div class="result-cont">
+        <img class="result-bg" src="https://static.wixstatic.com/media/ebc535_d7ec4b6bc8bf4a309c0cd716d46ccf7e~mv2.png" alt="" />
+        <img id="result" />
+        <img id="loaderGif" src="https://static.wixstatic.com/media/c29151_22d8156b592e4d2b9048bd861755b1a7~mv2.gif" />
+      </div>
     </div>
     <script>
       let imgInput = document.getElementById("imgInput");
+      document.getElementById("uploadBtn").onclick = () => {
+        imgInput.click();
+      };
+      let resultImg = document.getElementById("result");
       let slider = document.getElementById("slider");
       let loaderGif = document.getElementById("loaderGif");
-      let done = false;
-      let threshold = 0.7 + slider.value / 250;
-      let threshold1 = 35 * (1 + slider.value / 10);
+      let threshold = 0.7 + slider.value / 330;
+      let threshold1 = 50 + (slider.value)*2.05
       slider.onchange = () => {
-        threshold = 0.7 + slider.value / 250;
-        threshold1 = 35 * (1 + slider.value / 10);
+        threshold = 0.7 + slider.value / 330;
+        threshold1 = 50 + (slider.value)*2.05
         img.src = img.src;
-        loaderGif.style.display = "block";
-        slider.style.display = "none";
-        imgInput.style.display = "none";
+        loaderGif.style.visibility = "visible";
+        resultImg.style.filter = "blur(5px)";
+        slider.disabled = true;
+        imgInput.disabled = true;
       };
       imgInput.onchange = (e) => {
         let file = e.target.files[0];
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
-          loaderGif.style.display = "block";
-          slider.style.display = "none";
-          imgInput.style.display = "none";
+          loaderGif.style.visibility = "visible";
+          resultImg.style.filter = "blur(5px)";
+          slider.disabled = true;
+          imgInput.disabled = true;
           img.src = reader.result;
         };
       };
@@ -67,6 +185,9 @@
       var img1 = document.getElementById("img");
       let pixels = [];
       let width = 800;
+      let kernelSize = 20;
+      let kernelSquare = kernelSize * kernelSize;
+      let kernelBy2 = Math.ceil(kernelSize / 2);
       img1.onload = () => {
         let t1 = new Date().getTime();
         let img = new Image();
@@ -84,10 +205,6 @@
             pixels[i][j] = data.data[(i * data.width + j) * 4];
           }
         }
-
-        let kernelSize = 20;
-        let kernelSquare = kernelSize * kernelSize;
-        let kernelBy2 = Math.ceil(kernelSize / 2);
         let temp = threshold / kernelSquare;
         let count = 0;
         for (let i = 0; i < pixels.length; i++) {
@@ -125,14 +242,14 @@
           }
         }
         ctx.putImageData(data, 0, 0);
-        document.getElementById("result").src = c.toDataURL();
+        resultImg.src = c.toDataURL();
         t2 = new Date().getTime() - t1;
-        document.getElementById("time").innerHTML = "Time taken: " + t2 / 1000 + " seconds";
+        // document.getElementById("time").innerHTML = "Time taken: " + t2 / 1000 + " seconds";
         console.log(new Date().getTime() - t1);
-        slider.style.display = "block";
-        imgInput.style.display = "block";
-        loaderGif.style.display = "none";
-        done = true;
+        slider.disabled = false;
+        imgInput.disabled = false;
+        loaderGif.style.visibility = "hidden";
+        resultImg.style.filter = "blur(0px)";
       };
     </script>
   </body>
